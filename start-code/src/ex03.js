@@ -10,12 +10,9 @@ app.use(express.json());
 
 // Mark attendance for a student in a class on a given date
 app.post("/attendance", async (req, res) => {
-  // Accept both lowercase and capitalized keys from query
-  const StudentId = req.query.studentId || req.query.StudentId;
-  const ClassId = req.query.classId || req.query.ClassId;
-  const date = req.query.date;
-  const status = req.query.status;
+  const { StudentId, ClassId, date, status } = req.body;
 
+  console.log(`Student: ${StudentId}\nClassId: ${ClassId}\ndate: ${date}\nstatus: ${status}`)
   if (!StudentId || !ClassId || !date || !status) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
@@ -26,20 +23,21 @@ app.post("/attendance", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+
+    console.log("Inserted record:", attendance.toJSON());
 });
 
 // Get attendance for a student on a specific date
 app.get("/attendance", async (req, res) => {
-  const studentId = req.query.studentId || req.query.StudentId;
-  const date = req.query.date;
+  const { StudentId, date} = req.body
 
-  if (!studentId || !date) {
+  if (!StudentId || !date) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
   try {
     const attendance = await AttendanceRecord.findOne({
-      where: { StudentId: studentId, date },
+      where: { StudentId: StudentId, date },
       include: [Class, Student],
     });
 
@@ -54,20 +52,24 @@ app.get("/attendance", async (req, res) => {
 
 // List attendance for all students in a class (optional date filter)
 app.get("/classes/:id/attendance", async (req, res) => {
-  const classId = req.params.id;
-  const date = req.query.date;
+  const ClassId = req.params.id;
+  const date = req.body
 
-  const whereClause = { ClassId: classId };
+  const whereClause = { ClassId: ClassId };
   if (date) {
     whereClause.date = date;
   }
 
   try {
     const records = await AttendanceRecord.findAll({
-      where: whereClause,
+      // where: whereClause,
       include: Student,
       order: [["date", "ASC"]],
     });
+
+    console.log("\n", records);
+    console.log("whereClause:", whereClause);
+
     res.json(records);
   } catch (error) {
     res.status(500).json({ error: error.message });
