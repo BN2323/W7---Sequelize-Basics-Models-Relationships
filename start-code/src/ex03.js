@@ -56,13 +56,12 @@ app.get("/classes/:id/attendance", async (req, res) => {
   const date = req.body
 
   const whereClause = { ClassId: ClassId };
-  if (date) {
-    whereClause.date = date;
-  }
+
+  console.log(date)
 
   try {
     const records = await AttendanceRecord.findAll({
-      // where: whereClause,
+      where: whereClause,
       include: Student,
       order: [["date", "ASC"]],
     });
